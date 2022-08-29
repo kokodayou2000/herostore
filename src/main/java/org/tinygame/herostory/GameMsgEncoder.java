@@ -8,7 +8,6 @@ import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinygame.herostory.msg.GameMsgProtocol;
 
 //实现编码器，使用户能互相看到对方
 public class GameMsgEncoder extends ChannelOutboundHandlerAdapter {
@@ -25,7 +24,9 @@ public class GameMsgEncoder extends ChannelOutboundHandlerAdapter {
 
         int msgCode = -1;
         //通过对象的类型，得到对应的msgCode
-        msgCode = GameMsgRecognizer.getMessageCodyByMsgObject(msg);
+        msgCode = GameMsgRecognizer.getMessageCodyByMsgClazz(msg.getClass());
+
+
 
         if (msgCode <= -1 ){
             LOGGER.error("无法识别消息：msgClazz =  {}",msg.getClass().getName());

@@ -24,6 +24,7 @@ public class ServerMain {
     public static void main(String[] args) {
         //初始化字典工厂
         CmdHandlerFactory.init();
+        GameMsgRecognizer.init();
 
 
         //实际上是两个线程池
