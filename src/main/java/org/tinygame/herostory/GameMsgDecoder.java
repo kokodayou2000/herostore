@@ -1,14 +1,19 @@
 package org.tinygame.herostory;
 
 import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.Message;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tinygame.herostory.msg.GameMsgProtocol;
 
 //解码
 public class GameMsgDecoder extends ChannelInboundHandlerAdapter {
+
+    private static Logger LOGGER = LoggerFactory.getLogger(GameMsgDecoder.class);
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -21,38 +26,37 @@ public class GameMsgDecoder extends ChannelInboundHandlerAdapter {
         //转化byteBuf
         ByteBuf byteBuf = frame.content();
 
+
+
+
         byteBuf.readShort(); //读取消息长度
         int msgCode = byteBuf.readShort(); //读取消息编号
 
 
+        //通过一个工厂类，根据msgCode得到MessageBuilder
+        Message.Builder msgBuilder = GameMsgRecognizer.getBuilderByMsgCode(msgCode);
+
+        if (null == msgBuilder){
+            LOGGER.info("无法识别的消息：msgCode = {}",msgCode);
+            return;
+        }
 
 
         //拿到消息体之后
         byte[] msgBody = new byte[byteBuf.readableBytes()];
         byteBuf.readBytes(msgBody);
 
+        msgBuilder.clear();
 
-        //消息的父类
-        GeneratedMessageV3 messageV3 = null;
+        //通过合并的方式读取消息
+        msgBuilder.mergeFrom(msgBody);
 
+        //构建消息
+        Message newMessage = msgBuilder.build();
 
-        switch (msgCode){
-            case GameMsgProtocol.MsgCode.USER_ENTRY_CMD_VALUE: //如果读取到的是消息0
-                messageV3 = GameMsgProtocol.UserEntryCmd.parseFrom(msgBody); //
-                break;
-            case GameMsgProtocol.MsgCode.WHO_ELSE_IS_HERE_CMD_VALUE:
-                messageV3 = GameMsgProtocol.WhoElseIsHereCmd.parseFrom(msgBody);
-                break;
-            case GameMsgProtocol.MsgCode.USER_MOVE_TO_CMD_VALUE:
-                messageV3 = GameMsgProtocol.UserMoveToCmd.parseFrom(msgBody);
-                break;
-
-
-        }
-
-        if (null != messageV3){
+        if (null != newMessage){
             //ctx是一个信道，将消息解码之后，重新触发ChannelRead函数
-            ctx.fireChannelRead(messageV3);
+            ctx.fireChannelRead(newMessage);
         }
 
 

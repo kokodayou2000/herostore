@@ -13,8 +13,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
+import org.tinygame.herostory.cmdHandler.CmdHandlerFactory;
 
 
 public class ServerMain {
@@ -23,6 +22,10 @@ public class ServerMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerMain.class);
 
     public static void main(String[] args) {
+        //初始化字典工厂
+        CmdHandlerFactory.init();
+
+
         //实际上是两个线程池
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
